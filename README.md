@@ -23,6 +23,7 @@ cd ThyrnAnalyzer
 cmake -B build
 cmake --build build
 ./build/ThyrnAnalyzer /bin/ls
+
 Windows
 
 PowerShell
