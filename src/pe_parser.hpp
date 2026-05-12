@@ -51,7 +51,7 @@ namespace Thyrn {
             std::cout << std::dec;
 
             uint16_t opt_header_size = *reinterpret_cast<const uint16_t*>(&buffer[e_lfanew + 20]);
-            uint32_t first_section_offset = e_lfanew + 24 + opt_header_size;
+            size_t first_section_offset = static_cast<size_t>(e_lfanew) + 24 + opt_header_size;
 
             std::cout << "[--- PE SECTIONS (MEMORY MAP) ---]\n";
             std::cout << std::left << std::setw(10) << "Name" 
@@ -62,7 +62,7 @@ namespace Thyrn {
             std::cout << "---------------------------------------------------------\n";
 
             for (int i = 0; i < sections; ++i) {
-                uint32_t current_sec = first_section_offset + (i * 40);
+                size_t current_sec = first_section_offset + (i * 40);
                 if (current_sec + 40 > buffer.size()) break;
 
                 char name[9] = {0};

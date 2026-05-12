@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint>
 #include <iomanip>
+#include <string>
 
 namespace Thyrn {
     namespace ELF {
@@ -23,6 +24,11 @@ namespace Thyrn {
             uint8_t elf_class = buffer[0x04];
             std::cout << "[*] Class        : " << (elf_class == 2 ? "ELF64 (64-bit)" : "ELF32 (32-bit)") << "\n";
 
+            uint8_t endianness = buffer[0x05];
+            if (endianness == 2) {
+                std::cerr << "[!] WARNING: Big-Endian ELF detected! Offsets will read incorrectly on Little-Endian host.\n";
+            }
+
             uint16_t machine = *reinterpret_cast<const uint16_t*>(&buffer[0x12]);
             std::cout << "[*] Architecture : 0x" << std::hex << machine;
             if (machine == 0x3E) std::cout << " (x86_64 - AMD64)\n";
@@ -41,7 +47,6 @@ namespace Thyrn {
 
             std::cout << "[+] ELF core structure validated. Ready to dump memory sections.\n\n";
             std::cout << std::dec;
-
             std::cout << "[--- ELF SECTIONS (MEMORY MAP) ---]\n";
             if (elf_class == 2) {
                 uint64_t shoff = *reinterpret_cast<const uint64_t*>(&buffer[0x28]);
@@ -74,7 +79,13 @@ namespace Thyrn {
 
                     std::string sec_name = "";
                     if (name_idx != 0 && (strtab_offset + name_idx < buffer.size())) {
-                        sec_name = reinterpret_cast<const char*>(&buffer[strtab_offset + name_idx]);
+                        size_t max_len = buffer.size() - (strtab_offset + name_idx);
+                        const char* str_ptr = reinterpret_cast<const char*>(&buffer[strtab_offset + name_idx]);
+                        size_t actual_len = 0;
+                        while (actual_len < max_len && str_ptr[actual_len] != '\0') {
+                            actual_len++;
+                        }
+                        sec_name = std::string(str_ptr, actual_len);
                     } else if (i == 0) {
                         sec_name = "NULL";
                     }
